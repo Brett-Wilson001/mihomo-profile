@@ -1,0 +1,954 @@
+# Profile Enhancement Merge Template for Clash Verge
+#
+# 1. 机场订阅只负责提供节点，不依赖机场自带策略组和规则
+# 2. 所有自定义策略组均使用固定名称，切换不同订阅无需修改 rules
+# 3. 基础规则使用 Loyalsoldier https://github.com/Loyalsoldier/clash-rules
+# 4. 细分服务规则使用 blackmatrix7 / ios_rule_script https://github.com/blackmatrix7/ios_rule_script
+# 5. SteamCN、局域网、中国 IP 等优先直连
+# 6. AI / 流媒体等需要地区选择的服务保留独立策略组
+#
+# blackmatrix7 的 Clash 规则采用 classical 格式。
+# OpenAI、Claude、Gemini、Copilot、SteamCN 等路径均来自其公开规则项目。
+# SteamCN 独立 DIRECT，可避免 Steam 中国 CDN 被国外代理接管。
+#
+# 注意：
+# - 本配置故意不依赖机场的「手动选择」「节点选择」「全球代理」等分组。
+# - include-all 会直接收集订阅中的实际节点 / provider 节点。
+# - 如果某些机场把「剩余流量 / 到期时间」伪装成节点，exclude-filter 会尽量排除。
+# - tld-not-cn 保留 provider，但默认不启用，因为匹配范围过宽，容易造成不必要代理。
+
+profile:
+  store-selected: true
+
+dns:
+  use-system-hosts: false
+
+
+# ============================================================
+# 策略组
+# ============================================================
+
+proxy-groups:
+
+  # ----------------------------------------------------------
+  # 基础节点选择
+  # ----------------------------------------------------------
+
+  - name: "🚀 默认代理"
+    type: select
+    proxies:
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "♻️ 自动选择"
+    type: url-test
+    include-all: true
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota|剩余流量)"
+    url: "https://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🎯 全部节点"
+    type: select
+    include-all: true
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota|剩余流量)"
+
+  # ----------------------------------------------------------
+  # 地区节点
+  # ----------------------------------------------------------
+
+  - name: "🇭🇰 香港"
+    type: select
+    include-all: true
+    filter: "(?i)(香港|港|Hong.?Kong|\\bHK\\b|HKT|HKBN)"
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota)"
+
+  - name: "🇹🇼 台湾"
+    type: select
+    include-all: true
+    filter: "(?i)(台湾|台灣|Taiwan|Taipei|台北|\\bTW\\b)"
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota)"
+
+  - name: "🇯🇵 日本"
+    type: select
+    include-all: true
+    filter: "(?i)(日本|东京|東京|大阪|Japan|Tokyo|Osaka|\\bJP\\b)"
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota)"
+
+  - name: "🇸🇬 新加坡"
+    type: select
+    include-all: true
+    filter: "(?i)(新加坡|狮城|Singapore|\\bSG\\b)"
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota)"
+
+  - name: "🇺🇸 美国"
+    type: select
+    include-all: true
+    filter: "(?i)(美国|美國|United.?States|America|洛杉矶|洛杉磯|纽约|紐約|西雅图|西雅圖|芝加哥|硅谷|矽谷|盐湖城|鹽湖城|佛罗里达|佛羅里達|Dallas|Seattle|Chicago|New.?York|Los.?Angeles|San.?Jose|\\bUSA?\\b)"
+    exclude-filter: "(?i)(剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota)"
+
+  - name: "🌍 其他地区"
+    type: select
+    include-all: true
+    exclude-filter: "(?i)(香港|港|Hong.?Kong|\\bHK\\b|HKT|台湾|台灣|Taiwan|Taipei|\\bTW\\b|日本|东京|東京|大阪|Japan|Tokyo|Osaka|\\bJP\\b|新加坡|Singapore|\\bSG\\b|美国|美國|United.?States|America|洛杉矶|洛杉磯|纽约|紐約|西雅图|西雅圖|芝加哥|硅谷|矽谷|盐湖城|鹽湖城|佛罗里达|佛羅里達|Dallas|Seattle|Chicago|New.?York|Los.?Angeles|San.?Jose|\\bUSA?\\b|剩余|流量|套餐|到期|过期|官网|客服|邮箱|traffic|expire|quota)"
+
+
+  # ==========================================================
+  # AI
+  # ==========================================================
+
+  - name: "🤖 OpenAI"
+    type: select
+    proxies:
+      - "🇺🇸 美国"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🧠 Claude"
+    type: select
+    proxies:
+      - "🇺🇸 美国"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "✨ Gemini"
+    type: select
+    proxies:
+      - "🇺🇸 美国"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🪟 Copilot"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🤖 其他 AI"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+
+  # ==========================================================
+  # 大型互联网服务
+  # ==========================================================
+
+  - name: "🔎 Google"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "Ⓜ️ Microsoft"
+    type: select
+    proxies:
+      - DIRECT
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+
+  - name: "🍎 Apple"
+    type: select
+    proxies:
+      - DIRECT
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+
+  - name: "🐙 GitHub"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+
+  # ==========================================================
+  # 通讯 / 社交
+  # ==========================================================
+
+  - name: "✈️ Telegram"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🐦 Twitter"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "💬 WhatsApp"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+
+  # ==========================================================
+  # 视频 / 流媒体
+  # ==========================================================
+
+  - name: "📺 YouTube"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🎬 Netflix"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🏰 Disney+"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "🎞️ Max"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "📦 Prime Video"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "📱 TikTok"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+  - name: "📺 Bilibili"
+    type: select
+    proxies:
+      - DIRECT
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+
+  - name: "🐉 Bahamut"
+    type: select
+    proxies:
+      - "🇹🇼 台湾"
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+
+  # ==========================================================
+  # 游戏
+  # ==========================================================
+
+  - name: "🎮 游戏平台"
+    type: select
+    proxies:
+      - DIRECT
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+
+
+  # ==========================================================
+  # 最终流量
+  # ==========================================================
+
+  - name: "🐟 漏网之鱼"
+    type: select
+    proxies:
+      - "🚀 默认代理"
+      - "♻️ 自动选择"
+      - "🎯 全部节点"
+      - "🇭🇰 香港"
+      - "🇹🇼 台湾"
+      - "🇯🇵 日本"
+      - "🇸🇬 新加坡"
+      - "🇺🇸 美国"
+      - "🌍 其他地区"
+      - DIRECT
+
+
+# ============================================================
+# Rule Providers
+# ============================================================
+
+rule-providers:
+
+  # ==========================================================
+  # Loyalsoldier：基础规则
+  # ==========================================================
+
+  reject:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
+    path: ./ruleset/loyalsoldier/reject.yaml
+    interval: 86400
+
+  icloud:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
+    path: ./ruleset/loyalsoldier/icloud.yaml
+    interval: 86400
+
+  apple-cn-direct:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
+    path: ./ruleset/loyalsoldier/apple-cn-direct.yaml
+    interval: 86400
+
+  google-cn-direct:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt"
+    path: ./ruleset/loyalsoldier/google-cn-direct.yaml
+    interval: 86400
+
+  proxy:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
+    path: ./ruleset/loyalsoldier/proxy.yaml
+    interval: 86400
+
+  direct:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
+    path: ./ruleset/loyalsoldier/direct.yaml
+    interval: 86400
+
+  private:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
+    path: ./ruleset/loyalsoldier/private.yaml
+    interval: 86400
+
+  gfw:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
+    path: ./ruleset/loyalsoldier/gfw.yaml
+    interval: 86400
+
+  # 保留但默认不在 rules 中启用。
+  # 此规则覆盖所有非中国大陆 TLD，范围较宽。
+  tld-not-cn:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
+    path: ./ruleset/loyalsoldier/tld-not-cn.yaml
+    interval: 86400
+
+  telegramcidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
+    path: ./ruleset/loyalsoldier/telegramcidr.yaml
+    interval: 86400
+
+  cncidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
+    path: ./ruleset/loyalsoldier/cncidr.yaml
+    interval: 86400
+
+  lancidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
+    path: ./ruleset/loyalsoldier/lancidr.yaml
+    interval: 86400
+
+  applications:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt"
+    path: ./ruleset/loyalsoldier/applications.yaml
+    interval: 86400
+
+
+  # ==========================================================
+  # Blackmatrix7：AI
+  # ==========================================================
+
+  OpenAI:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/OpenAI/OpenAI.yaml"
+    path: ./ruleset/blackmatrix7/OpenAI.yaml
+    interval: 86400
+
+  Claude:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Claude/Claude.yaml"
+    path: ./ruleset/blackmatrix7/Claude.yaml
+    interval: 86400
+
+  Gemini:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Gemini/Gemini.yaml"
+    path: ./ruleset/blackmatrix7/Gemini.yaml
+    interval: 86400
+
+  Copilot:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Copilot/Copilot.yaml"
+    path: ./ruleset/blackmatrix7/Copilot.yaml
+    interval: 86400
+
+
+  # ==========================================================
+  # Blackmatrix7：互联网服务
+  # ==========================================================
+
+  google:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Google/Google.yaml"
+    path: ./ruleset/blackmatrix7/google.yaml
+    interval: 86400
+
+  Microsoft:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Microsoft/Microsoft.yaml"
+    path: ./ruleset/blackmatrix7/Microsoft.yaml
+    interval: 86400
+
+  GitHub:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GitHub/GitHub.yaml"
+    path: ./ruleset/blackmatrix7/GitHub.yaml
+    interval: 86400
+
+  Telegram:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Telegram/Telegram.yaml"
+    path: ./ruleset/blackmatrix7/Telegram.yaml
+    interval: 86400
+
+  Twitter:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Twitter/Twitter.yaml"
+    path: ./ruleset/blackmatrix7/Twitter.yaml
+    interval: 86400
+
+  WhatsApp:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Whatsapp/Whatsapp.yaml"
+    path: ./ruleset/blackmatrix7/Whatsapp.yaml
+    interval: 86400
+
+  apple:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Apple/Apple.yaml"
+    path: ./ruleset/blackmatrix7/apple.yaml
+    interval: 86400
+
+
+  # ==========================================================
+  # Blackmatrix7：流媒体
+  # ==========================================================
+
+  YouTube:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/YouTube/YouTube.yaml"
+    path: ./ruleset/blackmatrix7/YouTube.yaml
+    interval: 86400
+
+  Netflix:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Netflix/Netflix.yaml"
+    path: ./ruleset/blackmatrix7/Netflix.yaml
+    interval: 86400
+
+  Disney:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Disney/Disney.yaml"
+    path: ./ruleset/blackmatrix7/Disney.yaml
+    interval: 86400
+
+  HBO:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/HBO/HBO.yaml"
+    path: ./ruleset/blackmatrix7/HBO.yaml
+    interval: 86400
+
+  PrimeVideo:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/AmazonPrimeVideo/AmazonPrimeVideo.yaml"
+    path: ./ruleset/blackmatrix7/AmazonPrimeVideo.yaml
+    interval: 86400
+
+  TikTok:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/TikTok/TikTok.yaml"
+    path: ./ruleset/blackmatrix7/TikTok.yaml
+    interval: 86400
+
+  Bilibili:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBili/BiliBili.yaml"
+    path: ./ruleset/blackmatrix7/BiliBili.yaml
+    interval: 86400
+
+  Bahamut:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Bahamut/Bahamut.yaml"
+    path: ./ruleset/blackmatrix7/Bahamut.yaml
+    interval: 86400
+
+
+  # ==========================================================
+  # Blackmatrix7：游戏
+  # ==========================================================
+
+  SteamCN:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/SteamCN/SteamCN.yaml"
+    path: ./ruleset/blackmatrix7/SteamCN.yaml
+    interval: 86400
+
+  Steam:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Steam/Steam.yaml"
+    path: ./ruleset/blackmatrix7/Steam.yaml
+    interval: 86400
+
+  Blizzard:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Blizzard/Blizzard.yaml"
+    path: ./ruleset/blackmatrix7/Blizzard.yaml
+    interval: 86400
+
+  EA:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/EA/EA.yaml"
+    path: ./ruleset/blackmatrix7/EA.yaml
+    interval: 86400
+
+  Epic:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Epic/Epic.yaml"
+    path: ./ruleset/blackmatrix7/Epic.yaml
+    interval: 86400
+
+  Nintendo:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Nintendo/Nintendo.yaml"
+    path: ./ruleset/blackmatrix7/Nintendo.yaml
+    interval: 86400
+
+  Xbox:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Xbox/Xbox.yaml"
+    path: ./ruleset/blackmatrix7/Xbox.yaml
+    interval: 86400
+
+  PlayStation:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/PlayStation/PlayStation.yaml"
+    path: ./ruleset/blackmatrix7/PlayStation.yaml
+    interval: 86400
+
+  Riot:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Riot/Riot.yaml"
+    path: ./ruleset/blackmatrix7/Riot.yaml
+    interval: 86400
+
+  Rockstar:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Rockstar/Rockstar.yaml"
+    path: ./ruleset/blackmatrix7/Rockstar.yaml
+    interval: 86400
+
+  HoYoverse:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/HoYoverse/HoYoverse.yaml"
+    path: ./ruleset/blackmatrix7/HoYoverse.yaml
+    interval: 86400
+
+  GOG:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Gog/Gog.yaml"
+    path: ./ruleset/blackmatrix7/Gog.yaml
+    interval: 86400
+
+
+# ============================================================
+# Rules
+#
+# Mihomo / Clash 按从上到下顺序匹配。
+# 越具体的服务越靠前，基础代理 / 国内规则越靠后。
+# ============================================================
+
+rules:
+
+  # ----------------------------------------------------------
+  # 本机 / 局域网
+  # ----------------------------------------------------------
+
+  - RULE-SET,applications,DIRECT
+  - RULE-SET,private,DIRECT
+  - RULE-SET,lancidr,DIRECT,no-resolve
+
+  - DOMAIN,clash.razord.top,DIRECT
+  - DOMAIN,yacd.haishan.me,DIRECT
+
+
+  # ----------------------------------------------------------
+  # 自定义规则
+  # ----------------------------------------------------------
+  - DOMAIN-SUFFIX,linuxdo.org,DIRECT
+  - DOMAIN-SUFFIX,linux.do,🚀 默认代理
+
+
+  # ----------------------------------------------------------
+  # 广告 / 拒绝
+  # ----------------------------------------------------------
+
+  - RULE-SET,reject,REJECT
+
+
+  # ----------------------------------------------------------
+  # Steam 中国区 / CDN
+  #
+  # 必须在 Steam 国际规则之前。
+  # ----------------------------------------------------------
+
+  - RULE-SET,SteamCN,DIRECT
+
+  - DOMAIN-SUFFIX,cm.steampowered.com,DIRECT
+  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  - DOMAIN-SUFFIX,steamserver.net,DIRECT
+
+
+  # ----------------------------------------------------------
+  # AI
+  #
+  # 必须早于 Google / Microsoft 等大范围规则。
+  # ----------------------------------------------------------
+
+  - RULE-SET,OpenAI,🤖 OpenAI
+  - RULE-SET,Claude,🧠 Claude
+  - RULE-SET,Gemini,✨ Gemini
+  - RULE-SET,Copilot,🪟 Copilot
+
+  # 一些暂时没有单独 provider 的 AI 服务
+  - DOMAIN-SUFFIX,poe.com,🤖 其他 AI
+  - DOMAIN-SUFFIX,perplexity.ai,🤖 其他 AI
+  - DOMAIN-SUFFIX,perplexity.com,🤖 其他 AI
+  - DOMAIN-SUFFIX,character.ai,🤖 其他 AI
+  - DOMAIN-SUFFIX,jetbrains.ai,🤖 其他 AI
+  - DOMAIN-SUFFIX,cursor.com,🤖 其他 AI
+
+
+  # ----------------------------------------------------------
+  # 视频 / 流媒体
+  #
+  # YouTube 必须早于 Google。
+  # ----------------------------------------------------------
+
+  - RULE-SET,YouTube,📺 YouTube
+  - RULE-SET,Netflix,🎬 Netflix
+  - RULE-SET,Disney,🏰 Disney+
+  - RULE-SET,HBO,🎞️ Max
+  - RULE-SET,PrimeVideo,📦 Prime Video
+  - RULE-SET,TikTok,📱 TikTok
+  - RULE-SET,Bahamut,🐉 Bahamut
+  - RULE-SET,Bilibili,📺 Bilibili
+
+
+  # ----------------------------------------------------------
+  # 通讯 / 社交
+  # ----------------------------------------------------------
+
+  - RULE-SET,Telegram,✈️ Telegram
+  - RULE-SET,telegramcidr,✈️ Telegram,no-resolve
+  - RULE-SET,Twitter,🐦 Twitter
+  - RULE-SET,WhatsApp,💬 WhatsApp
+
+
+  # ----------------------------------------------------------
+  # 游戏平台
+  # ----------------------------------------------------------
+
+  - RULE-SET,Steam,🎮 游戏平台
+  - RULE-SET,Blizzard,🎮 游戏平台
+  - RULE-SET,EA,🎮 游戏平台
+  - RULE-SET,Epic,🎮 游戏平台
+  - RULE-SET,Nintendo,🎮 游戏平台
+  - RULE-SET,Xbox,🎮 游戏平台
+  - RULE-SET,PlayStation,🎮 游戏平台
+  - RULE-SET,Riot,🎮 游戏平台
+  - RULE-SET,Rockstar,🎮 游戏平台
+  - RULE-SET,HoYoverse,🎮 游戏平台
+  - RULE-SET,GOG,🎮 游戏平台
+
+
+  # ----------------------------------------------------------
+  # 大型互联网服务
+  #
+  # AI / YouTube / Copilot 已经在前面优先匹配。
+  # ----------------------------------------------------------
+
+  - RULE-SET,GitHub,🐙 GitHub
+  - RULE-SET,google,🔎 Google
+  - RULE-SET,Microsoft,Ⓜ️ Microsoft
+
+  - RULE-SET,apple,🍎 Apple
+
+  # icloud 已被 apple 包含
+  # - RULE-SET,icloud,🍎 Apple
+
+  - RULE-SET,apple-cn-direct,DIRECT
+  - RULE-SET,google-cn-direct,DIRECT
+
+
+  # ----------------------------------------------------------
+  # 明确代理
+  # ----------------------------------------------------------
+
+  - RULE-SET,gfw,🚀 默认代理
+  - RULE-SET,proxy,🚀 默认代理
+
+  # tld-not-cn 范围非常宽，默认关闭。
+  # 如希望所有非 CN TLD 都代理，可取消下一行注释。
+  # - RULE-SET,tld-not-cn,🚀 默认代理
+
+
+  # ----------------------------------------------------------
+  # 明确直连
+  # ----------------------------------------------------------
+
+  - RULE-SET,direct,DIRECT
+
+
+  # ----------------------------------------------------------
+  # 中国 IP
+  # ----------------------------------------------------------
+
+  - RULE-SET,cncidr,DIRECT,no-resolve
+
+
+  # ----------------------------------------------------------
+  # GEOIP 兜底
+  # ----------------------------------------------------------
+
+  - GEOIP,LAN,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT,no-resolve
+
+
+  # ----------------------------------------------------------
+  # 最终兜底
+  # ----------------------------------------------------------
+
+  - MATCH,🐟 漏网之鱼
