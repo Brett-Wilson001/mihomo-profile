@@ -824,11 +824,11 @@ rules:
   # 必须在 Steam 国际规则之前。
   # ----------------------------------------------------------
 
-  - RULE-SET,SteamCN,DIRECT
+  # - RULE-SET,SteamCN,DIRECT
 
-  - DOMAIN-SUFFIX,cm.steampowered.com,DIRECT
-  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
-  - DOMAIN-SUFFIX,steamserver.net,DIRECT
+  # - DOMAIN-SUFFIX,cm.steampowered.com,DIRECT
+  # - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  # - DOMAIN-SUFFIX,steamserver.net,DIRECT
 
 
   # ----------------------------------------------------------
